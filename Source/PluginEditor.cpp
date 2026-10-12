@@ -161,6 +161,10 @@ ModBoxEditor::ModBoxEditor (ModBoxProcessor& p)
     buttonAttachments.push_back (std::make_unique<ButtonAttachment> (state, "bypass", bypassButton));
     addAndMakeVisible (bypassButton);
 
+    autoGainButton.setClickingTogglesState (true);
+    buttonAttachments.push_back (std::make_unique<ButtonAttachment> (state, "autogain", autoGainButton));
+    addAndMakeVisible (autoGainButton);
+
     // Sine and triangle are the two halves of one switch.
     shapeAttachment = std::make_unique<ParameterAttachment> (*state.getParameter ("shape"), [this] (float value)
     {
@@ -186,6 +190,7 @@ ModBoxEditor::ModBoxEditor (ModBoxProcessor& p)
     describe ({ &slotAButton, &slotBButton }, "A et B : deux réglages côte à côte, pour comparer.");
     describe ({ &copyButton }, "Copie les réglages qu'on écoute dans l'autre slot.");
     describe ({ &bypassButton }, "Bypass : l'entrée telle qu'elle est arrivée.");
+    describe ({ &autoGainButton }, "Auto Gain : ramène la sortie au niveau de l'entrée, jusqu'à 12 dB dans un sens ou dans l'autre, pour comparer et régler sans être trompé par le volume. Le réglage Out s'ajoute par-dessus.");
     describe ({ &sweep }, "En haut, ce que le plugin fait au spectre à cet instant, côté gauche et côté droit. En bas, le retard de chaque voix, la gauche au-dessus de la droite.");
 
     describe ({ &circuit }, "Circuit : de la ligne à retard numérique parfaite (à 0) au circuit analogique BBD (à 100). À 0, ni saturation, ni filtre, ni dérive, ni souffle.");
@@ -544,6 +549,8 @@ void ModBoxEditor::resized()
 
     auto foot = bounds.removeFromBottom (kFootHeight).reduced (14, 0).withTrimmedBottom (12).withTrimmedTop (4);
     output.setBounds (foot.removeFromRight (100));
+    foot.removeFromRight (10);
+    autoGainButton.setBounds (foot.removeFromRight (104).withSizeKeepingCentre (104, 26));
 
     // The licence badge takes the empty left of the foot. The window grows by
     // giving its contents more room, not by zooming them: the scale is 1.

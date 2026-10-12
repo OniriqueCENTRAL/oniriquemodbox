@@ -376,6 +376,57 @@ int main()
         check (worstErrorDb (noise, run (s, noise).left, 0) < -120.0, "bypassed, what comes out is what went in");
     }
 
+    std::printf ("\nAuto gain\n");
+    {
+        // The level over the last second, once the followers have settled.
+        auto levelDb = [] (const std::vector<float>& x)
+        {
+            double sum = 0.0;
+            const auto from = x.size() - (size_t) kSr;
+
+            for (auto i = from; i < x.size(); ++i)
+                sum += (double) x[i] * x[i];
+
+            return 10.0 * std::log10 (sum / kSr + 1.0e-20);
+        };
+
+        const auto in = levelDb (noise);
+
+        // A setting that is louder than what goes in.
+        auto loud = still (3.0f);
+        loud.voices = 4;
+        loud.feedback = 0.9f;
+        loud.mix = 0.7f;
+        loud.distortion = 1.0f;
+        const auto without = levelDb (run (loud, noise).left) - in;
+        loud.autoGain = true;
+        const auto with = levelDb (run (loud, noise).left) - in;
+        std::printf ("        (%.1f dB without, %.2f dB with)\n", without, with);
+        check (std::abs (without) > 0.5 && std::abs (with) < 0.2, "a setting that changes the level comes out at the level of the input");
+
+        // And one that is quieter: all wet, crushed, the bass kept out of it.
+        auto quiet = still (5.0f);
+        quiet.mix = 1.0f;
+        quiet.feedback = -0.6f;
+        quiet.keepHz = 400.0f;
+        quiet.crush = 1.0f;
+        const auto quietWithout = levelDb (run (quiet, noise).left) - in;
+        quiet.autoGain = true;
+        const auto quietWith = levelDb (run (quiet, noise).left) - in;
+        std::printf ("        (%.1f dB without, %.2f dB with)\n", quietWithout, quietWith);
+        check (std::abs (quietWith) < 0.5, "whichever way the level went");
+
+        // The output gain is the user's, and is left on top.
+        loud.outDb = -6.0f;
+        check (std::abs (levelDb (run (loud, noise).left) - in + 6.0) < 0.5, "the output gain comes on top of it");
+
+        auto dry = still (5.0f);
+        dry.mix = 0.0f;
+        dry.autoGain = true;
+        check (worstErrorDb (noise, run (dry, noise).left, 0) < -120.0, "with nothing to make up for, it does nothing");
+        check (peakOf (run (loud, silence).left) == 0.0, "and silence stays silence");
+    }
+
     std::printf ("\nSpeed\n");
     {
         mdx::Settings s;

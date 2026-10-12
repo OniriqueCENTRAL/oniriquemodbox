@@ -177,6 +177,10 @@ void Modulator::prepare (double rate, int numInputChannels, int numOutputChannel
     voiceCoef = coefficient (0.003);
     gainCoef = coefficient (0.015);
 
+    // Per sample, these two: the auto gain follows the levels over 0.4 s and moves in 50 ms.
+    powerCoef = (float) (1.0 - std::exp (-1.0 / (0.4 * sampleRate)));
+    autoCoef = (float) (1.0 - std::exp (-1.0 / (0.05 * sampleRate)));
+
     // The wander of the clock: noise held to under a hertz, and to a few.
     wowCoef = coefficient (1.0 / (2.0 * kPi * 0.7));
     flutterCoef = coefficient (1.0 / (2.0 * kPi * 7.0));
@@ -206,6 +210,9 @@ void Modulator::reset() noexcept
             filter.clear();
 
     holdPhase = 0.0f;
+    powerIn = powerOut = 0.0;
+    autoGain = 1.0f;
+    autoBlend = 0.0f;
     held[0] = held[1] = 0.0f;
 
     writeAt = 0;
@@ -253,6 +260,7 @@ void Modulator::tick() noexcept
     to (g.mix, clamp01 (s.mix), slowCoef);
     to (g.out, std::pow (10.0f, s.outDb / 20.0f), slowCoef);
     to (g.bypass, s.bypass ? 1.0f : 0.0f, gainCoef);
+    to (g.autoGain, s.autoGain ? 1.0f : 0.0f, gainCoef);
 
     // Digital is exactly digital: what is left of the circuit as it fades is
     // dropped once it is too little to hear.
@@ -338,6 +346,7 @@ void Modulator::tick() noexcept
     feedbackNow.aim (feedbackGain (heard), perSample, now);
     outGain.aim (g.out, perSample, now);
     bypassNow.aim (g.bypass, perSample, now);
+    autoNow.aim (g.autoGain, perSample, now);
 
     // The voices.
     const auto count = std::min ((int) kMaxVoices, std::max (1, s.voices));
@@ -509,6 +518,7 @@ void Modulator::process (const float* const* in, float* const* out, int numSampl
         const auto dry = dryGain.next();
         const auto volume = outGain.next();
         const auto bypass = bypassNow.next();
+        autoBlend = autoNow.next();
 
         for (int c = 0; c < channels; ++c)
         {
@@ -544,6 +554,9 @@ void Modulator::process (const float* const* in, float* const* out, int numSampl
                 holdPhase -= 1.0f;
         }
 
+        float mixed[kMaxChannels];
+        double in2 = 0.0, out2 = 0.0;
+
         for (int c = 0; c < channels; ++c)
         {
             auto heard = wet[c] * thickness;
@@ -559,7 +572,28 @@ void Modulator::process (const float* const* in, float* const* out, int numSampl
             if (distortionBlend > 0.0f)
                 heard += distortionBlend * (distortionLevel * std::tanh (distortionGain * heard) - heard);
 
-            const auto processed = volume * (low[c] + dry * high[c] + level * heard);
+            mixed[c] = low[c] + dry * high[c] + level * heard;
+            in2 += (double) x[c] * x[c];
+            out2 += (double) mixed[c] * mixed[c];
+        }
+
+        // The auto gain measures the effect before the output gain, which stays
+        // the user's. It listens all the time, so that it is already right when
+        // it is switched on, and holds where it is while nothing comes in.
+        powerIn += powerCoef * (in2 - powerIn);
+        powerOut += powerCoef * (out2 - powerOut);
+
+        if (powerIn > 1.0e-9 && powerOut > 1.0e-12)
+        {
+            const auto wanted = (float) std::sqrt (powerIn / powerOut);
+            autoGain += autoCoef * (std::min (kAutoGainRange, std::max (1.0f / kAutoGainRange, wanted)) - autoGain);
+        }
+
+        const auto makeup = 1.0f + autoBlend * (autoGain - 1.0f);
+
+        for (int c = 0; c < channels; ++c)
+        {
+            const auto processed = volume * makeup * mixed[c];
             out[c][i] = x[c] + (1.0f - bypass) * (processed - x[c]);
         }
     }

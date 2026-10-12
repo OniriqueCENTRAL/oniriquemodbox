@@ -110,6 +110,13 @@ reste propre. Chacun des trois est entièrement hors circuit à 0.
 | **Downsample** | Fréquence d'échantillonnage abaissée de 40 kHz à 300 Hz (échantillonneur-bloqueur, avec son repliement). |
 | **Distortion** | Saturation franche (jusqu'à 36 dB dans une tanh), quel que soit le circuit. |
 
+### Sortie
+
+| Contrôle | Rôle |
+|---|---|
+| **Auto Gain** | Ramène la sortie au niveau de l'entrée, jusqu'à 12 dB dans un sens ou dans l'autre : les deux niveaux sont suivis sur 0,4 s, avant le réglage Out. Il écoute même éteint, pour être juste dès qu'on l'allume, et ne bouge pas pendant un silence. |
+| **Out** | Le niveau de tout ce qui sort, par-dessus l'auto gain. |
+
 ### Presets et types
 
 Un clic sur le nom du preset ouvre le navigateur, par-dessus tout ce qui est

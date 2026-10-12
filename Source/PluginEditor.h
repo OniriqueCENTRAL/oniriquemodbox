@@ -88,7 +88,7 @@ private:
     int deleteArmed = 0;    // ticks left in which a second click deletes
 
     TextButton slotAButton { "A" }, slotBButton { "B" }, copyButton;
-    TextButton bypassButton { "BYPASS" };
+    TextButton bypassButton { "BYPASS" }, autoGainButton { "AUTO GAIN" };
 
     // Circuit: from digital to analog, and what analog brings with it.
     Knob circuit { "CIRCUIT" }, drive { "DRIVE" }, drift { "DRIFT" }, noise { "NOISE" };

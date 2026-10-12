@@ -190,6 +190,7 @@ namespace
         number ("distortion", "Distortion", hundred, defaults.distortion * 100.0f, percent());
 
         number ("out", "Output", { -24.0f, 24.0f, 0.1f }, defaults.outDb, signedValue (1, "dB"));
+        layout.add (std::make_unique<AudioParameterBool> (ParameterID { "autogain", 1 }, "Auto Gain", false));
         layout.add (std::make_unique<AudioParameterBool> (ParameterID { "bypass", 1 }, "Bypass", false));
 
         return layout;
@@ -343,13 +344,13 @@ struct ModBoxProcessor::Raw
         delay = get ("delay");       feedback = get ("feedback"); cross = get ("cross");
         mix = get ("mix");           out = get ("out");           bypass = get ("bypass");
         crush = get ("crush");       downsample = get ("downsample");
-        distortion = get ("distortion");
+        distortion = get ("distortion"); autoGain = get ("autogain");
     }
 
     std::atomic<float> *circuit, *drive, *drift, *noise, *stages, *voices, *spread, *keep,
                        *rate, *depth, *shape, *rate2, *lfo2, *stereo,
                        *delay, *feedback, *cross, *mix, *out, *bypass,
-                       *crush, *downsample, *distortion;
+                       *crush, *downsample, *distortion, *autoGain;
 };
 
 //==============================================================================
@@ -417,6 +418,7 @@ mdx::Settings ModBoxProcessor::readSettings() const noexcept
     s.distortion = r.distortion->load() * 0.01f;
 
     s.outDb = r.out->load();
+    s.autoGain = r.autoGain->load() > 0.5f;
     s.bypass = r.bypass->load() > 0.5f;
 
     return s;

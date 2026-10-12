@@ -54,6 +54,7 @@ struct Settings
     float distortion = 0.0f;    // 0..1
 
     float outDb = 0.0f;
+    bool autoGain = false;      // bring the output back to the level of the input
     bool bypass = false;
 };
 
@@ -78,6 +79,9 @@ float crushBits (float crush) noexcept;
 /** The rate the voices are held at when they are downsampled: 40 kHz where
     it starts, 300 Hz at its most. */
 float holdHz (float downsample) noexcept;
+
+/** How far the auto gain may go either way, as an amplitude: 12 dB. */
+constexpr float kAutoGainRange = 4.0f;
 
 /** The Q of the circuit's low-pass. */
 constexpr double kBbdFilterQ = 0.9;
@@ -114,6 +118,9 @@ public:
 
     /** in and out may be the same buffers. */
     void process (const float* const* in, float* const* out, int numSamples) noexcept;
+
+    /** What the auto gain is applying just now, as an amplitude: 1 while it is off. */
+    float autoGainNow() const noexcept { return 1.0f + autoBlend * (autoGain - 1.0f); }
 
     /** Where a voice is reading the line just now, for the editor. */
     float voiceDelayMs (int voice, int channel) const noexcept;
@@ -205,7 +212,7 @@ private:
         float spread = 0.0f, keepHz = 20.0f, keep = 0.0f;
         float depth = 0.0f, lfo2 = 0.0f, stereo = 0.0f;
         float delayMs = 4.0f, feedback = 0.0f, cross = 0.0f, mix = 0.0f;
-        float out = 1.0f, bypass = 0.0f;
+        float out = 1.0f, bypass = 0.0f, autoGain = 0.0f;
         float crush = 0.0f, downsample = 0.0f, distortion = 0.0f;
     } glided;
 
@@ -214,7 +221,12 @@ private:
     float crushStep = 0.0f, holdStep = 1.0f, holdPhase = 0.0f, held[kMaxChannels] = {};
     float distortionGain = 1.0f, distortionLevel = 1.0f, distortionBlend = 0.0f;
 
-    Ramp dryGain, wetGain, feedbackNow, outGain, bypassNow, keepNow;
+    Ramp dryGain, wetGain, feedbackNow, outGain, bypassNow, keepNow, autoNow;
+
+    // The auto gain: the power going in and the power coming out, each followed
+    // over a few tenths of a second, and the gain that makes the second the first.
+    double powerIn = 0.0, powerOut = 0.0;
+    float autoGain = 1.0f, autoBlend = 0.0f, powerCoef = 0.0f, autoCoef = 0.0f;
     float analog = 0.0f, crossNow = 0.0f, driveNow = 1.0f, noiseNow = 0.0f;
     bool analogRunning = false;
 
