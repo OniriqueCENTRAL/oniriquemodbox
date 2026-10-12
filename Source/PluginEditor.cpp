@@ -211,6 +211,9 @@ ModBoxEditor::ModBoxEditor (ModBoxProcessor& p)
     hoverTip.setAlwaysOnTop (true);
     addChildComponent (hoverTip);
 
+    licenseOverlay = std::make_unique<onirique::license::Overlay> ("MODBOX", processor.license);
+    addAndMakeVisible (*licenseOverlay);
+
     setResizable (true, true);
     setResizeLimits (1120, 620, 2200, 1250);
     setSize (1240, 690);
@@ -541,6 +544,11 @@ void ModBoxEditor::resized()
 
     auto foot = bounds.removeFromBottom (kFootHeight).reduced (14, 0).withTrimmedBottom (12).withTrimmedTop (4);
     output.setBounds (foot.removeFromRight (100));
+
+    // The licence badge takes the empty left of the foot. The window grows by
+    // giving its contents more room, not by zooming them: the scale is 1.
+    if (licenseOverlay != nullptr)
+        licenseOverlay->fit (getLocalBounds(), 1.0f, foot.withWidth (248).withSizeKeepingCentre (248, 26));
 
     // The families take the lower half, the sweep what is left above them.
     auto lower = bounds.removeFromBottom (jlimit (270, 360, bounds.getHeight() * 52 / 100)).reduced (14, 0);

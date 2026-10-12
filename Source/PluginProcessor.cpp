@@ -424,6 +424,7 @@ mdx::Settings ModBoxProcessor::readSettings() const noexcept
 
 void ModBoxProcessor::prepareToPlay (double sampleRate, int)
 {
+    license.refresh();
     modulator.setSettings (readSettings());
     modulator.prepare (sampleRate, getMainBusNumInputChannels(), getMainBusNumOutputChannels());
 }
@@ -457,6 +458,9 @@ void ModBoxProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
 
     modulator.setSettings (readSettings());
     modulator.process (in, out, numSamples);
+
+    // Last, and over every output: what an unlicensed plugin lets through.
+    license.process (buffer, getSampleRate(), isNonRealtime());
 
     for (int c = numOut; c < buffer.getNumChannels(); ++c)
         buffer.clear (c, 0, numSamples);

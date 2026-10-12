@@ -90,6 +90,11 @@ target_sources(OniriqueModBox PRIVATE
     Source/ui/SweepDisplay.cpp
     Source/ui/Theme.cpp)
 
+# The licence every Onirique plugin carries: the folder is copied as it is from
+# plugin-license/ in the ONIRIQUE CENTRAL repository, and is only ever changed there.
+include(License/OniriqueLicense.cmake)
+onirique_add_license(OniriqueModBox)
+
 target_compile_definitions(OniriqueModBox PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0

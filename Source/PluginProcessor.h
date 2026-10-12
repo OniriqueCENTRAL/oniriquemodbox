@@ -3,6 +3,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "License/LicenseGuard.h"
 #include "dsp/Modulator.h"
 
 namespace onirique
@@ -115,6 +116,10 @@ public:
     void restoreSettings (const ValueTree& settings, const String& presetName);
 
     AudioProcessorValueTreeState apvts;
+
+    /** The licence ONIRIQUE CENTRAL wrote on this machine for this plugin, under
+        the identifier the plugin has in its catalogue. */
+    onirique::license::Guard license { "onirique-modbox" };
 
 private:
     /** The values of everything a preset or a slot holds, by parameter. */
