@@ -524,6 +524,11 @@ void ModBoxEditor::resized()
     auto row = header.withTrimmedBottom (6).withSizeKeepingCentre (header.getWidth(), 30).withTrimmedRight (14);
 
     bypassButton.setBounds (row.removeFromRight (100));
+    row.removeFromRight (10);
+
+    // The licence badge is one of the header's buttons, next to Bypass: the same height, the same capsule.
+    // Its room is that of its longest wording; it sits against Bypass whatever it says.
+    const auto badge = row.removeFromRight (150);
     row.removeFromRight (18);
 
     copyButton.setBounds (row.removeFromRight (64));
@@ -552,10 +557,9 @@ void ModBoxEditor::resized()
     foot.removeFromRight (10);
     autoGainButton.setBounds (foot.removeFromRight (104).withSizeKeepingCentre (104, 26));
 
-    // The licence badge takes the empty left of the foot. The window grows by
-    // giving its contents more room, not by zooming them: the scale is 1.
+    // The window grows by giving its contents more room, not by zooming them: the scale is 1.
     if (licenseOverlay != nullptr)
-        licenseOverlay->fit (getLocalBounds(), 1.0f, foot.withWidth (248).withSizeKeepingCentre (248, 26));
+        licenseOverlay->fit (getLocalBounds(), 1.0f, badge, Justification::centredRight);
 
     // The families take the lower half, the sweep what is left above them.
     auto lower = bounds.removeFromBottom (jlimit (270, 360, bounds.getHeight() * 52 / 100)).reduced (14, 0);
