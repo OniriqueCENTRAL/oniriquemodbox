@@ -527,8 +527,8 @@ void ModBoxEditor::resized()
     row.removeFromRight (10);
 
     // The licence badge is one of the header's buttons, next to Bypass: the same height, the same capsule.
-    // Its room is that of its longest wording; it sits against Bypass whatever it says.
-    const auto badge = row.removeFromRight (150);
+    // Its room follows its wording, and the header is laid out again when the licence changes.
+    const auto badge = row.removeFromRight (licenseOverlay != nullptr ? licenseOverlay->pillWidth() : 0);
     row.removeFromRight (18);
 
     copyButton.setBounds (row.removeFromRight (64));
