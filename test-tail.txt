@@ -1,0 +1,7 @@
+Test project /Users/runner/work/oniriquemodbox/oniriquemodbox/build
+    Start 1: modulator
+1/1 Test #1: modulator ........................   Passed    2.08 sec
+
+100% tests passed out of 1
+
+Total Test time (real) =   2.09 sec
