@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "ui/OniriqueWindowSize.h"
 
 #include <BinaryData.h>
 
@@ -221,7 +222,9 @@ ModBoxEditor::ModBoxEditor (ModBoxProcessor& p)
 
     setResizable (true, true);
     setResizeLimits (1120, 620, 2200, 1250);
-    setSize (1240, 690);
+    // taille d'ouverture : la règle commune des plugins ONIRIQUE (ui/OniriqueWindowSize.h)
+    const auto opening = onirique::window::openingSize ({}, "ONIRIQUE MODBOX", { 1240, 690 }, { 1120, 620 }, { 2200, 1250 });
+    setSize (opening.x, opening.y);
 
     timerCallback();
     startTimerHz (30);
@@ -229,6 +232,7 @@ ModBoxEditor::ModBoxEditor (ModBoxProcessor& p)
 
 ModBoxEditor::~ModBoxEditor()
 {
+    onirique::window::rememberOnThisComputer ("ONIRIQUE MODBOX", getWidth(), getHeight());
     setLookAndFeel (nullptr);
 }
 
