@@ -744,24 +744,35 @@ void ModBoxProcessor::restoreSettings (const ValueTree& settings, const String& 
     setPresetName (presetName);
 }
 
+std::vector<PresetBank::Stock> ModBoxProcessor::nuitStock() const
+{
+    // les presets d'usine pour la barre « Nuit », avec leurs types (lus sur les réglages, comme avant)
+    std::vector<PresetBank::Stock> list;
+
+    for (const auto& preset : stockPresets())
+    {
+        PresetBank::Stock s;
+        s.name = preset.name;
+        ValueTree snapshot (kSnapshot);
+
+        for (const auto& [id, value] : preset.values)
+        {
+            s.values.push_back ({ id, value });
+            snapshot.setProperty (id, value, nullptr);
+        }
+
+        s.tags = typesOf (snapshot);
+        list.push_back (std::move (s));
+    }
+
+    return list;
+}
+
 //==============================================================================
 void ModBoxProcessor::getStateInformation (MemoryBlock& destination)
 {
     auto state = apvts.copyState();
-
-    {
-        const ScopedLock lock (slotLock);
-
-        state.setProperty (kSlotProperty, activeSlot, nullptr);
-        state.removeChild (state.getChildWithName (kOtherSlot), nullptr);
-
-        if (slots[1 - activeSlot].isValid())
-        {
-            ValueTree other (kOtherSlot);
-            other.copyPropertiesFrom (slots[1 - activeSlot], nullptr);
-            state.appendChild (other, nullptr);
-        }
-    }
+    presets.writeState (state);   // le côté A/B écouté, et l'autre (même forme qu'avant)
 
     if (const auto xml = state.createXml())
         copyXmlToBinary (*xml, destination);
@@ -775,24 +786,7 @@ void ModBoxProcessor::setStateInformation (const void* data, int sizeInBytes)
         return;
 
     auto state = ValueTree::fromXml (*xml);
-    const auto other = state.getChildWithName (kOtherSlot);
-
-    {
-        const ScopedLock lock (slotLock);
-
-        activeSlot = jlimit (0, 1, (int) state.getProperty (kSlotProperty, 0));
-        slots[activeSlot] = {};
-        slots[1 - activeSlot] = {};
-
-        if (other.isValid())
-        {
-            ValueTree snapshot (kSnapshot);
-            snapshot.copyPropertiesFrom (other, nullptr);
-            slots[1 - activeSlot] = snapshot;
-        }
-    }
-
-    state.removeChild (other, nullptr);
+    presets.readState (state);   // l'autre côté A/B (même forme qu'avant)
     apvts.replaceState (state);
 }
 

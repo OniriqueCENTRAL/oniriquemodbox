@@ -5,6 +5,7 @@
 
 #include "License/LicenseGuard.h"
 #include "dsp/Modulator.h"
+#include "ui/OniriquePresets.h"
 
 namespace onirique
 {
@@ -116,6 +117,15 @@ public:
     void restoreSettings (const ValueTree& settings, const String& presetName);
 
     AudioProcessorValueTreeState apvts;
+
+
+    /** Les presets d'usine et ceux de l'utilisateur, la comparaison A/B : ce que montre la barre « Nuit » du haut.
+
+        Mêmes fichiers (Onirique/ModBox/Presets) et même état enregistré qu'avant. */
+
+    PresetBank presets { apvts, "ModBox", nuitStock(), getPresetTypeNames() };
+
+    std::vector<PresetBank::Stock> nuitStock() const;
 
     /** The licence ONIRIQUE CENTRAL wrote on this machine for this plugin, under
         the identifier the plugin has in its catalogue. */
