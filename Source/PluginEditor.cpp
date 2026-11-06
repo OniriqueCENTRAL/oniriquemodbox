@@ -292,6 +292,14 @@ void ModBoxEditor::deleteClicked()
 
 void ModBoxEditor::timerCallback()
 {
+    // la couleur de l'interface (menu ⋯, ou changée dans un autre plugin ONIRIQUE) : tout se redessine
+    if (onirique::look::changedSince (themeSeen))
+    {
+        daBackdrop = {};
+        daBackdrop = {};
+        std::function<void (juce::Component&)> all = [&all] (juce::Component& k) { k.repaint(); for (auto* ch : k.getChildren()) all (*ch); };
+        all (*this);
+    }
     // What a preset, the other slot or the host may have changed under us.
     const auto name = processor.getPresetName();
 
@@ -409,9 +417,9 @@ void ModBoxEditor::paintHeader (Graphics& g, Rectangle<int> header)
 
     // The crimson of the range: darkest at the sigil, brightest behind the
     // name, and falling away again to the right and towards the foot.
-    ColourGradient ground (Colour (0xff2c060b), 0.0f, 0.0f, Colour (0xff3b080e), area.getRight(), 0.0f, false);
-    ground.addColour (0.32, Colour (0xff7a0e1c));
-    ground.addColour (0.7, Colour (0xff5a0a14));
+    ColourGradient ground (onirique::look::tint (0xff2c060b), 0.0f, 0.0f, onirique::look::tint (0xff3b080e), area.getRight(), 0.0f, false);
+    ground.addColour (0.32, onirique::look::tint (0xff7a0e1c));
+    ground.addColour (0.7, onirique::look::tint (0xff5a0a14));
     g.setGradientFill (ground);
     g.fillRect (area);
 
@@ -484,7 +492,9 @@ void ModBoxEditor::paintHeader (Graphics& g, Rectangle<int> header)
 
 void ModBoxEditor::paint (Graphics& g)
 {
-    g.fillAll (night);
+    if (daBackdrop.getWidth() != getWidth() || daBackdrop.getHeight() != getHeight())
+        daBackdrop = onirique::da::backdrop (getWidth(), getHeight(), (float) getWidth() / 1100.0f);
+    g.drawImageAt (daBackdrop, 0, 0);
 
     paintHeader (g, getLocalBounds().removeFromTop (kHeaderHeight));
 
@@ -494,7 +504,7 @@ void ModBoxEditor::paint (Graphics& g)
     {
         const auto panel = panels[i].toFloat().reduced (0.5f);
 
-        g.setColour (deep);
+        g.setColour (deep.withAlpha (0.55f));   // verre sombre : le fond de VOCALBOX passe au travers
         g.fillRoundedRectangle (panel, 10.0f);
         g.setColour (line);
         g.drawRoundedRectangle (panel, 10.0f, 1.0f);
@@ -520,12 +530,17 @@ Rectangle<int> ModBoxEditor::cell (int panel, int row, int column) const
 
 void ModBoxEditor::resized()
 {
+    if (themeButton.getParentComponent() == nullptr) addAndMakeVisible (themeButton);
     auto bounds = getLocalBounds();
     auto header = bounds.removeFromTop (kHeaderHeight);
 
     // Controls sit in the upper part of the header, clear of the light that
     // runs along its foot.
     auto row = header.withTrimmedBottom (6).withSizeKeepingCentre (header.getWidth(), 30).withTrimmedRight (14);
+
+    themeButton.setBounds (row.removeFromRight (38));
+
+    row.removeFromRight (8);
 
     bypassButton.setBounds (row.removeFromRight (100));
     row.removeFromRight (10);

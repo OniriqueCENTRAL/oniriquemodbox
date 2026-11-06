@@ -1,3 +1,16 @@
+#if __has_include ("ui/OniriqueTheme.h")
+ #include "ui/OniriqueTheme.h"
+#elif __has_include ("UI/OniriqueTheme.h")
+ #include "UI/OniriqueTheme.h"
+#elif __has_include ("OniriqueTheme.h")
+ #include "OniriqueTheme.h"
+#elif __has_include ("../License/OniriqueTheme.h")
+ #include "../License/OniriqueTheme.h"
+#elif __has_include ("../../License/OniriqueTheme.h")
+ #include "../../License/OniriqueTheme.h"
+#else
+ #include "License/OniriqueTheme.h"
+#endif
 #include "PresetBrowser.h"
 
 #include "Theme.h"
@@ -281,7 +294,7 @@ void PresetBrowser::List::paint (Graphics& g)
 
         if (current)
         {
-            g.setGradientFill (ColourGradient (Colour (0xff6e0f1a), 0.0f, cell.getY(), Colour (0xff3a060c), 0.0f, cell.getBottom(), false));
+            g.setGradientFill (ColourGradient (onirique::look::tint (0xff6e0f1a), 0.0f, cell.getY(), onirique::look::tint (0xff3a060c), 0.0f, cell.getBottom(), false));
             g.fillRoundedRectangle (cell, cell.getHeight() * 0.5f);
             g.setColour (emberLit);
             g.drawRoundedRectangle (cell, cell.getHeight() * 0.5f, 1.2f);
