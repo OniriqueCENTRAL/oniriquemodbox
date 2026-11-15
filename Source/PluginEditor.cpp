@@ -512,10 +512,12 @@ void ModBoxEditor::paint (Graphics& g)
     {
         const auto panel = panels[i].toFloat().reduced (0.5f);
 
-        g.setColour (deep.withAlpha (0.55f));   // verre sombre : le fond de VOCALBOX passe au travers
-        g.fillRoundedRectangle (panel, 10.0f);
-        g.setColour (line);
-        g.drawRoundedRectangle (panel, 10.0f, 1.0f);
+        // posé sur le fond : un simple trait entre deux familles
+        if (i > 0)
+        {
+            g.setColour (line);
+            g.fillRect (panel.getX() - kPanelGap * 0.5f - 0.5f, panel.getY() + 8.0f, 1.0f, panel.getHeight() - 16.0f);
+        }
 
         g.setColour (haze);
         g.setFont (capsFont (9.5f).withExtraKerningFactor (0.3f));

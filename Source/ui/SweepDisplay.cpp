@@ -121,10 +121,7 @@ void SweepDisplay::paint (Graphics& g)
 {
     const auto bounds = getLocalBounds().toFloat().reduced (0.5f);
 
-    g.setColour (deep);
-    g.fillRoundedRectangle (bounds, 10.0f);
-    g.setColour (line);
-    g.drawRoundedRectangle (bounds, 10.0f, 1.0f);
+    // posé sur le fond, sans cadre
 
     auto inner = bounds.reduced (14.0f, 10.0f);
     auto strip = inner.removeFromBottom (jmin (52.0f, inner.getHeight() * 0.28f));
